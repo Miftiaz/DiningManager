@@ -21,7 +21,6 @@ export default function Dashboard() {
   const fetchDashboard = async () => {
     try {
       const res = await authAPI.getDashboard();
-      console.log(res.data);
       setDashboardData(res.data);
       setLoading(false);
     } catch (err) {
@@ -65,7 +64,7 @@ export default function Dashboard() {
           <div className="next-day-info">
             <h2>Next Day Border Count</h2>
             <div className="info-card">
-              <p>Day: {dashboardData.nextDayInfo?.dayNumber}</p>
+              <p>Day: {dashboardData.nextDayInfo?.nextDayNo}</p>
               <p>Date: {formatDate(dashboardData.nextDayInfo?.date)}</p>
               <p>Borders: {dashboardData.nextDayInfo?.borderCount}</p>
             </div>

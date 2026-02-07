@@ -7,8 +7,7 @@ const diningDaySchema = new mongoose.Schema({
   isPast: { type: Boolean, default: false },
   students: [
     {
-      student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' },
-      meals: { type: Number, default: 2, min: 0, max: 2 } // 0, 1, or 2 meals
+      student: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' }
     }
   ],
   createdAt: { type: Date, default: Date.now }

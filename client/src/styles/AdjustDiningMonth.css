@@ -66,17 +66,6 @@
   color: #333;
 }
 
-.calendar-hint {
-  font-size: 14px;
-  color: #666;
-  font-style: italic;
-  margin-bottom: 15px;
-  padding: 10px;
-  background-color: #f0f8ff;
-  border-left: 3px solid #667eea;
-  border-radius: 4px;
-}
-
 .monthly-calendars {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -152,6 +141,13 @@
   box-shadow: inset 0 0 5px rgba(255, 193, 7, 0.5);
 }
 
+.calendar-cell.selected .cell-day {
+  color: #333333 !important;
+}
+.calendar-cell.selected .dining-number {
+  background-color: #4CAF50 !important;
+}
+
 .empty-day {
   background-color: #f0f0f0;
 }
@@ -178,7 +174,7 @@
 }
 
 .calendar-cell.purchased {
-  background-color: #2e7d32;
+  background-color: hsl(123, 46%, 34%);
   border: 2px solid #1b5e20;
   color: white;
 }
@@ -221,55 +217,6 @@
 .dining-days-list h3 {
   color: #333;
   margin-bottom: 15px;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 10px;
-}
-
-.calendar-day {
-  padding: 15px;
-  background-color: #f8f9fa;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  text-align: center;
-  transition: all 0.3s ease;
-}
-
-.calendar-day.past {
-  background-color: #e8e8e8;
-  color: #666;
-}
-
-.calendar-day.break {
-  background-color: #ffe0e0;
-  border-color: #ff6b6b;
-}
-
-.day-num {
-  font-weight: bold;
-  font-size: 18px;
-  margin-bottom: 5px;
-}
-
-.day-info {
-  font-size: 12px;
-  color: #666;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-}
-
-.break-label {
-  font-size: 10px;
-  background-color: #ff6b6b;
-  color: white;
-  padding: 3px 8px;
-  border-radius: 3px;
-  margin-top: 5px;
 }
 
 .breaks-section {
@@ -392,28 +339,6 @@
 .confirm-button:hover {
   background-color: #218838;
   box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.break-form {
-  background-color: #f8f9fa;
-  padding: 20px;
-  border-radius: 6px;
-  margin-bottom: 20px;
-  display: grid;
-  gap: 15px;
-}
-
-.break-form input {
-  width: 100%;
-}
-
-.break-form button {
-  background-color: #28a745;
-  color: white;
-}
-
-.break-form button:hover {
-  background-color: #218838;
 }
 
 .breaks-list {

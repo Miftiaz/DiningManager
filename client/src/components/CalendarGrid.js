@@ -119,12 +119,21 @@ export default function CalendarGrid({ monthData, selectedDates = new Set(), onD
         calendarCells.push(
           <div
             key={`day-${day}`}
-            className={`calendar-cell ${diningDay ? 'dining-day' : ''} ${diningDay?.isPast ? 'past' : ''} ${isBreakDay ? 'break' : ''} ${isClickable ? 'clickable' : ''} ${isSelected ? 'selected' : ''} ${isSelected && mode === 'return-token' ? 'return-selected' : ''} ${isPurchased ? 'purchased' : ''} ${isToday ? 'today' : ''}`}
+            className={`
+              calendar-cell
+              ${diningDay ? 'dining-day' : ''}
+              ${diningDay?.isPast ? 'past' : ''}
+              ${isBreakDay ? 'break' : ''}
+              ${isClickable ? 'clickable' : ''}
+              ${isPurchased ? 'purchased' : ''}
+              ${isSelected ? 'selected' : ''}
+              ${isToday ? 'today' : ''}
+            `}
             onClick={handleDateClick}
             title={breakDayObject ? breakDayObject.reason : ''}
           >
             <span className="cell-day">{day}</span>
-            {diningDay && <span className="dining-number">Day {diningDay.day}</span>}
+            {diningDay && <span className="dining-number">Day {diningDay.day || diningDay.dayNumber}</span>}
             {isBreakDay && <span className="break-indicator">Break</span>}
           </div>
         );

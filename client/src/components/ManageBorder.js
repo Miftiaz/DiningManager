@@ -13,7 +13,7 @@ export default function ManageBorder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
-  const [mode, setMode] = useState('adjust'); // 'adjust' or 'return'
+  const [mode, setMode] = useState(null); // null, 'adjust', or 'return'
   const [studentSelectedDays, setStudentSelectedDays] = useState(new Set()); // Original selected days
 
   const handleSearch = async () => {
@@ -38,7 +38,7 @@ export default function ManageBorder() {
           }) || []
         );
         setStudentSelectedDays(existingDates);
-        setSelectedDates(new Set(existingDates)); // For adjust mode
+        setSelectedDates(new Set()); // For adjust mode
         setPaidAmount(res.data.student.paidAmount || 0);
       } else {
         setStudentData(null);
@@ -47,7 +47,6 @@ export default function ManageBorder() {
         setPaidAmount(0);
       }
       setSearched(true);
-      setMode('adjust');
     } catch (err) {
       setError('Failed to search student');
     } finally {
@@ -122,7 +121,7 @@ export default function ManageBorder() {
           }) || []
         );
         setStudentSelectedDays(existingDates);
-        setSelectedDates(new Set(existingDates));
+        setSelectedDates(new Set());
         setPaidAmount(res.data.student.paidAmount || 0);
       }
     } catch (err) {
@@ -146,12 +145,23 @@ export default function ManageBorder() {
         datesToRemove: datesToRemove
       });
       alert('Token returned successfully');
-      setSearchId('');
-      setStudentData(null);
-      setSelectedDates(new Set());
-      setStudentSelectedDays(new Set());
-      setPaidAmount(0);
-      setSearched(false);
+      
+      // Refresh student data without clearing the form
+      const res = await borderAPI.searchStudent(searchId);
+      setMonthData(res.data);
+      if (res.data.exists) {
+        setStudentData(res.data.student);
+        const existingDates = new Set(
+          res.data.studentData?.selectedDays?.map(d => {
+            const dDate = new Date(d.day.date);
+            return dDate.toISOString().split('T')[0];
+          }) || []
+        );
+        setStudentSelectedDays(existingDates);
+        setSelectedDates(new Set());
+        setPaidAmount(res.data.student.paidAmount || 0);
+      }
+      setMode(null);
     } catch (err) {
       setError('Failed to return token');
     }
@@ -231,7 +241,7 @@ export default function ManageBorder() {
                 monthData={monthData}
                 selectedDates={selectedDates}
                 onDateClick={handleDateClick}
-                mode={mode === 'return' ? 'return-token' : 'add-break'}
+                mode={mode ? (mode === 'return' ? 'return-token' : 'add-break') : null}
                 purchasedDates={studentSelectedDays}
               />
             </div>
@@ -242,8 +252,13 @@ export default function ManageBorder() {
                   <button 
                     className={mode === 'adjust' ? 'active' : ''} 
                     onClick={() => {
-                      setMode('adjust');
-                      setSelectedDates(new Set(studentSelectedDays));
+                      if (mode === 'adjust') {
+                        setMode(null);
+                        setSelectedDates(new Set());
+                      } else {
+                        setMode('adjust');
+                        setSelectedDates(new Set());
+                      }
                     }}
                   >
                     Adjust Days
@@ -251,8 +266,13 @@ export default function ManageBorder() {
                   <button 
                     className={mode === 'return' ? 'active' : ''} 
                     onClick={() => {
-                      setMode('return');
-                      setSelectedDates(new Set(studentSelectedDays));
+                      if (mode === 'return') {
+                        setMode(null);
+                        setSelectedDates(new Set());
+                      } else {
+                        setMode('return');
+                        setSelectedDates(new Set());
+                      }
                     }}
                   >
                     Return Token
@@ -272,7 +292,7 @@ export default function ManageBorder() {
                   />
                   <p>Due Amount: {Math.max(0, selectedDates.size * 2 * 40 - Number(paidAmount))} TK</p>
 
-                  <button onClick={handleAdjust} className="submit-btn">
+                  <button onClick={() => {handleAdjust();}}  className="submit-btn">
                     Save Changes
                   </button>
                 </div>

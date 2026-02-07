@@ -77,18 +77,22 @@ const getDashboard = async (req, res) => {
       diningMonth: activeDiningMonth._id
     }).sort({ date: 1 });
 
-    // Get next day border count
-    let nextDay = new Date(todayUTC);
-    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+    // Find next dining day from actualDiningDays
+    const nextDayData = actualDiningDays.find(day => {
+      const dayDate = new Date(day.date);
+      dayDate.setUTCHours(0, 0, 0, 0);
+      return dayDate > todayUTC;
+    });
 
-    const nextDayData = await DiningDay.findOne({
-      diningMonth: activeDiningMonth._id,
-      date: {
-        $gte: nextDay,
-        $lt: new Date(nextDay.getTime() + 24 * 60 * 60 * 1000)
-      }
-    }).populate('students.student');
+    console.log(nextDayData);
 
+    // Populate students if nextDayData exists24    
+    if (nextDayData) {
+      await nextDayData.populate('students.student');
+    }
+
+    const nextDayNo = nextDayData.dayNumber;
+    const nextDayDate = nextDayData.date;
     const nextDayBorderCount = nextDayData ? nextDayData.students.length : 0;
 
     // Calculate current day number
@@ -133,8 +137,8 @@ const getDashboard = async (req, res) => {
       manager,
       activeDiningMonth,
       nextDayInfo: {
-        dayNumber,
-        date: todayUTC,
+        nextDayNo,
+        date: nextDayDate,
         borderCount: nextDayBorderCount
       },
       calendarDays,

@@ -135,17 +135,32 @@ const adjustStudentDays = async (req, res) => {
         }))
       });
     } else {
-      // Update existing student
+      // Update existing student - append new days to existing days
       if (name) student.name = name;
       if (phone) student.phone = phone;
       if (roomNo) student.roomNo = roomNo;
-      student.selectedDays = selectedDays.map(day => ({
-        day: day.dayId
+      
+      // Get existing day IDs
+      const existingDayIds = student.selectedDays.map(d => d.day.toString());
+      const newDayIds = selectedDays.map(day => day.dayId);
+      
+      // Combine existing and new days (remove duplicates)
+      const allDayIds = new Set([...existingDayIds, ...newDayIds]);
+      student.selectedDays = Array.from(allDayIds).map(dayId => ({
+        day: dayId
       }));
     }
 
-    // Set payment amounts (80 TK per day)
-    const payableAmount = selectedDays.length * 80;
+    // Add student to DiningDay documents for selected days
+    const selectedDayIds = selectedDays.map(day => day.dayId);
+    await DiningDay.updateMany(
+      { _id: { $in: selectedDayIds } },
+      { $addToSet: { students: { student: student._id } } }
+    );
+
+    // Set payment amounts (80 TK per day) - calculate based on ALL selected days (existing + new)
+    const totalDays = student.selectedDays.length;
+    const payableAmount = totalDays * 80;
     student.paidAmount = paidAmount || 0;
     student.dueAmount = Math.max(0, payableAmount - (paidAmount || 0));
 
@@ -156,7 +171,8 @@ const adjustStudentDays = async (req, res) => {
       const payment = new Payment({
         student: student._id,
         diningMonth: diningMonth._id,
-        amount: paidAmount
+        amount: paidAmount,
+        mealsDays: totalDays
       });
       await payment.save();
     }
