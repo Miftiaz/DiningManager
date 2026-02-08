@@ -103,9 +103,9 @@ export default function ManageFeastToken() {
                     </div>
                     
                     <div className="card-row">
-                      <span className="label">Due/Refund:</span>
+                      <span className="label">{student.dueAmount - student.totalPaid < 0 ? 'Refund:' : 'Due:'}</span>
                       <span className={student.dueAmount < 0 ? 'refund' : 'due'}>
-                        {Math.abs(student.dueAmount)} TK
+                        {student.dueAmount - student.totalPaid} TK
                       </span>
                     </div>
                     
@@ -203,20 +203,20 @@ export default function ManageFeastToken() {
               <div className="summary">
                 <h3>Summary</h3>
                 <div className="summary-grid">
-                  <div className="summary-item">
+                  {/* <div className="summary-item">
                     <span className="label">Total Amount:</span>
                     <span>{selectedStudent.totalAmount} TK</span>
                   </div>
                   <div className="summary-item">
                     <span className="label">Total Paid:</span>
                     <span>{selectedStudent.totalPaid} TK</span>
-                  </div>
+                  </div> */}
                   <div className="summary-item">
                     <span className={`label ${selectedStudent.dueAmount < 0 ? 'refund' : 'due'}`}>
-                      {selectedStudent.dueAmount < 0 ? 'Refund Due:' : 'Payment Due:'}
+                      {selectedStudent.dueAmount - selectedStudent.totalPaid < 0 ? 'Refund Due:' : 'Payment Due:'}
                     </span>
-                    <span className={selectedStudent.dueAmount < 0 ? 'refund' : 'due'}>
-                      {Math.abs(selectedStudent.dueAmount)} TK
+                    <span className={selectedStudent.dueAmount - selectedStudent.totalPaid < 0 ? 'refund' : 'due'}>
+                      {selectedStudent.dueAmount - selectedStudent.totalPaid} TK
                     </span>
                   </div>
                 </div>

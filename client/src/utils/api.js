@@ -28,12 +28,12 @@ export const borderAPI = {
   payFeastDue: (data) => API.post('/border/pay-feast', data)
 };
 
-export const feastTokenAPI = {
-  getList: (search) => API.get('/feast-token/list', { params: { search } }),
-  getDetails: (tokenId) => API.get(`/feast-token/${tokenId}`),
-  create: (data) => API.post('/feast-token/create', data),
-  updatePayment: (tokenId, data) => API.post(`/feast-token/${tokenId}/payment`, data)
-};
+// export const feastTokenAPI = {
+//   getList: (search) => API.get('/feast-token/list', { params: { search } }),
+//   getDetails: (tokenId) => API.get(`/feast-token/${tokenId}`),
+//   create: (data) => API.post('/feast-token/create', data),
+//   updatePayment: (tokenId, data) => API.post(`/feast-token/${tokenId}/payment`, data)
+// };
 
 export const diningMonthAPI = {
   getCalendar: () => API.get('/dining-month/calendar'),
