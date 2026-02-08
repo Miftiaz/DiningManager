@@ -12,8 +12,23 @@ const studentSchema = new mongoose.Schema({
       day: { type: mongoose.Schema.Types.ObjectId, ref: 'DiningDay' }
     }
   ],
-  paidAmount: { type: Number, default: 0 },
-  dueAmount: { type: Number, default: 0 },
+  transactions: [
+    {
+      date: { type: Date, default: Date.now },
+      days: { type: Number, required: true },
+      amount: { type: Number, required: true },
+      type: { type: String, enum: ['Payment', 'Refund'], required: true },
+      paidAmount: { type: Number, default: 0 }
+    }
+  ],
+  feastpaid: { type: Boolean, default: false },
+  returnCount: { type: Number, default: 0 },
+  returnedDays: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'DiningDay'
+    }
+  ],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

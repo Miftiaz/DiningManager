@@ -21,9 +21,11 @@ export const authAPI = {
 
 export const borderAPI = {
   searchStudent: (studentId) => API.get('/border/search', { params: { studentId } }),
+  getAllStudents: () => API.get('/border/all-students'),
   getCalendar: () => API.get('/border/calendar'),
   adjustStudentDays: (data) => API.post('/border/adjust', data),
-  returnToken: (data) => API.post('/border/return-token', data)
+  returnToken: (data) => API.post('/border/return-token', data),
+  payFeastDue: (data) => API.post('/border/pay-feast', data)
 };
 
 export const feastTokenAPI = {

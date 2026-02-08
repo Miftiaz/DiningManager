@@ -1,8 +1,6 @@
 const DiningMonth = require('../models/DiningMonth');
 const DiningDay = require('../models/DiningDay');
 const Student = require('../models/Student');
-const Payment = require('../models/Payment');
-const FeastToken = require('../models/FeastToken');
 
 // Search Student
 const searchStudent = async (req, res) => {
@@ -46,7 +44,6 @@ const searchStudent = async (req, res) => {
 
     // Student exists
     const selectedDaysCount = student.selectedDays.length;
-    const payableAmount = selectedDaysCount * 80;
 
     res.json({
       exists: true,
@@ -56,9 +53,9 @@ const searchStudent = async (req, res) => {
         phone: student.phone,
         roomNo: student.roomNo,
         selectedDaysCount,
-        payableAmount,
-        paidAmount: student.paidAmount,
-        dueAmount: student.dueAmount
+        transactions: student.transactions,
+        feastpaid: student.feastpaid,
+        returnCount: student.returnCount || 0
       },
       studentData: student,
       calendarDays,
@@ -132,9 +129,23 @@ const adjustStudentDays = async (req, res) => {
         roomNo,
         selectedDays: selectedDays.map(day => ({
           day: day.dayId
-        }))
+        })),
+        transactions: []
       });
     } else {
+      // Check if any selected days are in returnedDays (cannot re-purchase)
+      const returnedDayIds = (student.returnedDays || []).map(id => id.toString());
+      const attemptedReturnedDays = selectedDays.filter(day => 
+        returnedDayIds.includes(day.dayId.toString())
+      );
+
+      if (attemptedReturnedDays.length > 0) {
+        return res.status(400).json({
+          message: 'Cannot re-purchase days that have been returned.',
+          restrictedDays: attemptedReturnedDays.map(d => d.dayId)
+        });
+      }
+
       // Update existing student - append new days to existing days
       if (name) student.name = name;
       if (phone) student.phone = phone;
@@ -158,24 +169,19 @@ const adjustStudentDays = async (req, res) => {
       { $addToSet: { students: { student: student._id } } }
     );
 
-    // Set payment amounts (80 TK per day) - calculate based on ALL selected days (existing + new)
-    const totalDays = student.selectedDays.length;
-    const payableAmount = totalDays * 80;
-    student.paidAmount = paidAmount || 0;
-    student.dueAmount = Math.max(0, payableAmount - (paidAmount || 0));
+    // Calculate payable amount (80 TK per day) and add transaction
+    const newDaysCount = selectedDays.length;
+    const payableAmount = newDaysCount * 80;
+
+    student.transactions.push({
+      date: new Date(),
+      days: newDaysCount,
+      amount: payableAmount,
+      type: 'Payment',
+      paidAmount: paidAmount || 0
+    });
 
     await student.save();
-
-    // Create payment record if paid amount > 0
-    if (paidAmount && paidAmount > 0) {
-      const payment = new Payment({
-        student: student._id,
-        diningMonth: diningMonth._id,
-        amount: paidAmount,
-        mealsDays: totalDays
-      });
-      await payment.save();
-    }
 
     res.json({ message: 'Student updated', student });
   } catch (error) {
@@ -188,7 +194,7 @@ const adjustStudentDays = async (req, res) => {
 const returnToken = async (req, res) => {
   try {
     const managerId = req.managerId;
-    const { studentId, datesToRemove } = req.body;
+    const { studentId, datesToRemove, refundedAmount } = req.body;
 
     if (!datesToRemove || !Array.isArray(datesToRemove) || datesToRemove.length === 0) {
       return res.status(400).json({ message: 'datesToRemove must be a non-empty array' });
@@ -211,6 +217,42 @@ const returnToken = async (req, res) => {
 
     if (!student) {
       return res.status(400).json({ message: 'Student not found' });
+    }
+
+    // Check if student has reached maximum return count
+    const currentReturnCount = student.returnCount || 0;
+    const maxReturns = 10;
+    const remainingReturns = maxReturns - currentReturnCount;
+
+    if (currentReturnCount >= maxReturns) {
+      return res.status(400).json({
+        message: `Cannot return tokens. Maximum return limit (${maxReturns}) has been reached.`,
+        returnCount: currentReturnCount,
+        remainingReturns: 0
+      });
+    }
+
+    // Check minimum return quota
+    const daysRequested = datesToRemove.length;
+    const minReturnDays = 3;
+
+    if (daysRequested < minReturnDays) {
+      return res.status(400).json({
+        message: `Minimum ${minReturnDays} days required to return. You selected ${daysRequested} day(s).`,
+        returnCount: currentReturnCount,
+        remainingReturns,
+        minReturnDays
+      });
+    }
+
+    // Only allow up to the remaining return limit
+    if (daysRequested > remainingReturns) {
+      return res.status(400).json({
+        message: `Cannot return ${daysRequested} days. Only ${remainingReturns} day(s) remaining in quota.`,
+        returnCount: currentReturnCount,
+        remainingReturns,
+        maxReturns
+      });
     }
 
     // Parse dates to remove
@@ -237,10 +279,28 @@ const returnToken = async (req, res) => {
     // Update student - remove selected days
     student.selectedDays = selectedDaysToKeep;
 
-    // Recalculate payment amounts (80 TK per day)
-    const remainingDays = selectedDaysToKeep.length;
-    const payableAmount = remainingDays * 80;
-    student.dueAmount = Math.max(0, payableAmount - student.paidAmount);
+    // Add returned day IDs to returnedDays array to prevent re-purchase
+    student.returnedDays = student.returnedDays || [];
+    diningDayIdsToRemove.forEach(dayId => {
+      if (!student.returnedDays.includes(dayId)) {
+        student.returnedDays.push(dayId);
+      }
+    });
+
+    // Add refund transaction
+    const refundDays = diningDayIdsToRemove.length;
+    const refundAmount = refundedAmount || (refundDays * 35); // Use provided refundedAmount or default to 35 TK per day
+
+    student.transactions.push({
+      date: new Date(),
+      days: -refundDays,
+      amount: -refundAmount,
+      type: 'Refund',
+      paidAmount: -refundAmount
+    });
+
+    // Increment return count by number of days returned
+    student.returnCount = currentReturnCount + refundDays;
 
     await student.save();
 
@@ -250,9 +310,120 @@ const returnToken = async (req, res) => {
       { $pull: { students: { student: student._id } } }
     );
 
-    res.json({ message: 'Token returned successfully', student });
+    const updatedRemainingReturns = maxReturns - student.returnCount;
+    const notice = updatedRemainingReturns === 0 
+      ? `Token returned successfully. Student has reached maximum return limit (${maxReturns} returns).`
+      : `Token returned successfully. ${updatedRemainingReturns} return(s) remaining out of ${maxReturns}.`;
+
+    res.json({
+      message: notice,
+      student,
+      returnInfo: {
+        returnCount: student.returnCount,
+        remainingReturns: updatedRemainingReturns,
+        maxReturns
+      }
+    });
   } catch (error) {
     console.error('Error returning token:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Pay Feast Due
+const payFeastDue = async (req, res) => {
+  try {
+    const managerId = req.managerId;
+    const { studentId } = req.body;
+
+    const diningMonth = await DiningMonth.findOne({
+      manager: managerId,
+      isActive: true
+    });
+
+    if (!diningMonth) {
+      return res.status(400).json({ message: 'No active dining month' });
+    }
+
+    let student = await Student.findOne({
+      manager: managerId,
+      diningMonth: diningMonth._id,
+      id: studentId
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Add feast transaction
+    student.transactions.push({
+      date: new Date(),
+      days: 0,
+      amount: 100,
+      type: 'Payment',
+      paidAmount: 100
+    });
+
+    // Mark feast as paid
+    student.feastpaid = true;
+
+    await student.save();
+
+    res.json({ message: 'Feast paid successfully', student });
+  } catch (error) {
+    console.error('Error paying feast due:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get All Students with Summary
+const getAllStudents = async (req, res) => {
+  try {
+    const managerId = req.managerId;
+
+    const diningMonth = await DiningMonth.findOne({
+      manager: managerId,
+      isActive: true
+    });
+
+    if (!diningMonth) {
+      return res.status(400).json({ message: 'No active dining month' });
+    }
+
+    const students = await Student.find({
+      manager: managerId,
+      diningMonth: diningMonth._id
+    }).populate('selectedDays.day');
+
+    const studentsSummary = students.map(student => {
+      // Calculate totals from transactions
+      const totalDays = student.transactions.reduce((sum, t) => sum + Math.abs(t.days), 0);
+      const totalAmount = student.transactions.reduce((sum, t) => sum + t.amount, 0);
+      const totalPaid = student.transactions.reduce((sum, t) => sum + t.paidAmount, 0);
+      const dueAmount = totalAmount - totalPaid;
+
+      return {
+        id: student.id,
+        name: student.name,
+        phone: student.phone,
+        roomNo: student.roomNo,
+        selectedDaysCount: student.selectedDays.length,
+        totalDays,
+        totalAmount,
+        totalPaid,
+        dueAmount,
+        transactions: student.transactions,
+        feastpaid: student.feastpaid,
+        _id: student._id
+      };
+    });
+
+    res.json({
+      students: studentsSummary,
+      diningMonth
+    });
+  } catch (error) {
+    console.error('Error fetching all students:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -261,5 +432,7 @@ module.exports = {
   searchStudent,
   getCalendarForAdjustment,
   adjustStudentDays,
-  returnToken
+  returnToken,
+  payFeastDue,
+  getAllStudents
 };

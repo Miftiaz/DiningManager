@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function CalendarGrid({ monthData, selectedDates = new Set(), onDateClick, mode, purchasedDates = new Set() }) {
+export default function CalendarGrid({ monthData, selectedDates = new Set(), onDateClick, mode, purchasedDates = new Set(), returnedDayIds = new Set() }) {
   const renderCalendarGrid = (data) => {
     const months = {};
     
@@ -100,12 +100,13 @@ export default function CalendarGrid({ monthData, selectedDates = new Set(), onD
 
         let isClickable = false;
         const isPurchased = purchasedDates.has(dateStr);
+        const isReturned = diningDay && returnedDayIds.has(diningDay._id);
         
         if (mode === 'remove-break') {
           isClickable = isBreakDay && !isPastDate && !isToday;
         } else if (mode === 'add-break') {
-          // In adjust mode: can click non-purchased dining days (not today)
-          isClickable = diningDay && !isPastDate && !isToday && !isPurchased;
+          // In adjust mode: can click non-purchased, non-returned dining days (not today)
+          isClickable = diningDay && !isPastDate && !isToday && !isPurchased && !isReturned;
         } else if (mode === 'return-token') {
           // In return mode: can only click purchased dining days (not today)
           isClickable = diningDay && !isPastDate && !isToday && isPurchased;
@@ -126,15 +127,17 @@ export default function CalendarGrid({ monthData, selectedDates = new Set(), onD
               ${isBreakDay ? 'break' : ''}
               ${isClickable ? 'clickable' : ''}
               ${isPurchased ? 'purchased' : ''}
+              ${isReturned ? 'returned' : ''}
               ${isSelected ? 'selected' : ''}
               ${isToday ? 'today' : ''}
             `}
             onClick={handleDateClick}
-            title={breakDayObject ? breakDayObject.reason : ''}
+            title={breakDayObject ? breakDayObject.reason : (isReturned ? 'Returned - Cannot re-purchase' : '')}
           >
             <span className="cell-day">{day}</span>
             {diningDay && <span className="dining-number">Day {diningDay.day || diningDay.dayNumber}</span>}
             {isBreakDay && <span className="break-indicator">Break</span>}
+            {isReturned && <span className="returned-indicator">✗</span>}
           </div>
         );
       }

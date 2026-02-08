@@ -2,8 +2,6 @@ const jwt = require('jsonwebtoken');
 const Manager = require('../models/Manager');
 const DiningMonth = require('../models/DiningMonth');
 const DiningDay = require('../models/DiningDay');
-const Student = require('../models/Student');
-const FeastToken = require('../models/FeastToken');
 
 // Register Manager
 const registerManager = async (req, res) => {

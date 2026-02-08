@@ -97,6 +97,88 @@
   border-radius: 4px;
 }
 
+/* Feast Box Styling */
+.feast-box {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.feast-box:hover:not(.feast-paid) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.25);
+}
+
+.feast-box.feast-paid {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.15);
+}
+
+.feast-content {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.feast-icon {
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.feast-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.feast-amount {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff6b00;
+}
+
+.feast-status {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.feast-button {
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  white-space: nowrap;
+  margin-left: 15px;
+}
+
+.feast-button:hover {
+  background-color: #ff5252;
+  transform: scale(1.02);
+}
+
+.feast-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: scale(1);
+}
+
 .mode-buttons {
   display: flex;
   flex-direction: column;
@@ -105,24 +187,49 @@
 
 .mode-buttons button {
   width: 100%;
-  padding: 12px;
-  background-color: #e0e0e0;
-  color: #333;
-  border: 2px solid #ccc;
+  padding: 12px 16px;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
   transition: all 0.3s ease;
+  text-transform: capitalize;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-.mode-buttons button:hover {
-  background-color: #d0d0d0;
+.adjust-btn {
+  background-color: #e8f5e9;
+  color: #2e7d32;
 }
 
-.mode-buttons button.active {
-  background-color: #667eea;
+.adjust-btn:hover {
+  background-color: #c8e6c9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.adjust-btn.active {
+  background-color: #4caf50;
   color: white;
-  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.return-btn {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.return-btn:hover {
+  background-color: #ffcdd2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.return-btn.active {
+  background-color: #f44336;
+  color: white;
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
 }
 
 .calendar-selection {
@@ -223,4 +330,76 @@
 
 .return-btn:hover {
   background-color: #c82333;
+}
+.transaction-history {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  border-left: 4px solid #28a745;
+}
+
+.transaction-history h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.transaction-table thead {
+  background-color: #f8f9fa;
+}
+
+.transaction-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+  color: #333;
+}
+
+.transaction-table td {
+  padding: 12px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.transaction-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.transaction-table .total-row {
+  background-color: #e9ecef;
+  font-weight: 600;
+}
+
+.transaction-table .total-row td {
+  border-top: 2px solid #dee2e6;
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Returned Days Styling */
+.calendar-cell.returned {
+  background-color: #ffcccc !important;
+  border: 2px solid #d32f2f !important;
+  opacity: 0.6;
+  cursor: not-allowed !important;
+}
+
+.calendar-cell.returned .cell-day {
+  color: #d32f2f;
+  text-decoration: line-through;
+}
+
+.calendar-cell.returned .returned-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 18px;
+  color: #d32f2f;
+  font-weight: bold;
 }

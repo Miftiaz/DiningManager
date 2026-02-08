@@ -1,5 +1,5 @@
 .manage-feast-token-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -13,6 +13,9 @@
   color: white;
   padding: 10px 15px;
   font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .back-button button:hover {
@@ -24,29 +27,353 @@
   color: #333;
 }
 
-.search-section {
-  margin-bottom: 30px;
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.search-section input {
-  width: 100%;
-  max-width: 400px;
-}
-
-.subscribers-list {
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.subscribers-list h2 {
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 4px;
   margin-bottom: 20px;
+  border: 1px solid #f5c6cb;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+  font-size: 16px;
+}
+
+/* Students Cards Grid */
+.students-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.student-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  border-left: 4px solid #667eea;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.student-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.card-header h3 {
+  margin: 0 0 5px 0;
   color: #333;
+  font-size: 16px;
+}
+
+.student-id {
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.card-content {
+  flex: 1;
+  margin-bottom: 15px;
+}
+
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+.card-row .label {
+  color: #666;
+  font-weight: 500;
+}
+
+.card-row .status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.card-row .status.paid {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.card-row .status.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.card-row .status.advance {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.card-row .status.no-booking {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+.card-row .due {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.card-row .refund {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.details-btn {
+  background-color: #667eea;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.details-btn:hover {
+  background-color: #764ba2;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 10px;
+}
+
+.modal {
+  background-color: white;
+  border-radius: 8px;
+  max-width: 1200px !important;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 15px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.student-details h3,
+.transaction-history h3,
+.summary h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  border-bottom: 2px solid #667eea;
+  padding-bottom: 10px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.info-grid p {
+  margin: 0;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.info-grid strong {
+  color: #333;
+}
+
+/* Transaction Table */
+.transaction-history {
+  margin-top: 20px;
+  overflow-x: auto;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  font-size: 13px;
+  min-width: 700px;
+}
+
+.transaction-table thead {
+  background-color: #f8f9fa;
+  position: sticky;
+  top: 0;
+}
+
+.transaction-table th {
+  padding: 12px 10px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+  color: #333;
+  white-space: nowrap;
+}
+
+.transaction-table td {
+  padding: 10px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.transaction-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.transaction-table .total-row {
+  background-color: #e9ecef;
+  font-weight: 600;
+}
+
+.transaction-table .total-row td {
+  border-top: 2px solid #dee2e6;
+  border-bottom: 2px solid #dee2e6;
+}
+
+/* Summary */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.summary-item {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-item .label {
+  font-weight: 600;
+  color: #333;
+  margin-right: 10px;
+}
+
+.summary-item span:last-child {
+  font-size: 16px;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.summary-item .due {
+  color: #dc3545;
+}
+
+.summary-item .refund {
+  color: #28a745;
+}
+
+/* Feast Payment Box */
+.feast-payment-box {
+  background-color: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.feast-payment-box p {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+}
+
+.feast-payment-box strong {
+  color: #ff6b00;
+  font-weight: 700;
+}
+
+.feast-payment-box button {
+  width: 100%;
+  padding: 12px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.feast-payment-box button:hover {
+  background-color: #ff5252;
+}
+
+.feast-payment-box button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .subscribers-table {
@@ -99,45 +426,3 @@
   background-color: #764ba2;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal {
-  background-color: white;
-  padding: 30px;
-  border-radius: 8px;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-.modal h2 {
-  margin-bottom: 20px;
-  color: #333;
-}
-
-.modal p {
-  margin-bottom: 15px;
-  font-size: 16px;
-}
-
-.modal button {
-  background-color: #667eea;
-  color: white;
-  width: 100%;
-  margin-top: 20px;
-}
-
-.modal button:hover {
-  background-color: #764ba2;
-}

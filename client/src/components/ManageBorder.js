@@ -10,11 +10,14 @@ export default function ManageBorder() {
   const [selectedDates, setSelectedDates] = useState(new Set());
   const [monthData, setMonthData] = useState(null);
   const [paidAmount, setPaidAmount] = useState(0);
+  const [refundedAmount, setRefundedAmount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [searched, setSearched] = useState(false);
   const [mode, setMode] = useState(null); // null, 'adjust', or 'return'
   const [studentSelectedDays, setStudentSelectedDays] = useState(new Set()); // Original selected days
+  const [studentReturnedDayIds, setStudentReturnedDayIds] = useState(new Set()); // Returned day IDs
+  const [feastLoading, setFeastLoading] = useState(false);
 
   const handleSearch = async () => {
     if (!searchId.trim()) {
@@ -38,13 +41,19 @@ export default function ManageBorder() {
           }) || []
         );
         setStudentSelectedDays(existingDates);
+        
+        // Get returned day IDs
+        const returnedDayIds = new Set(
+          res.data.studentData?.returnedDays?.map(d => d.toString()) || []
+        );
+        setStudentReturnedDayIds(returnedDayIds);
+        
         setSelectedDates(new Set()); // For adjust mode
-        setPaidAmount(res.data.student.paidAmount || 0);
       } else {
         setStudentData(null);
         setSelectedDates(new Set());
         setStudentSelectedDays(new Set());
-        setPaidAmount(0);
+        setStudentReturnedDayIds(new Set());
       }
       setSearched(true);
     } catch (err) {
@@ -56,14 +65,41 @@ export default function ManageBorder() {
 
   const handleDateClick = (dateStr, isShiftKey) => {
     if (mode === 'adjust') {
-      // In adjust mode, cannot select already purchased days
+      // In adjust mode, cannot select already purchased days or returned days
       if (studentSelectedDays.has(dateStr)) {
         return; // Can't select days that are already purchased
+      }
+
+      // Check if day is in returnedDays
+      const calendarDaysMap = new Map(
+        monthData.calendarDays.map(day => [
+          new Date(day.date).toISOString().split('T')[0],
+          day
+        ])
+      );
+      const dayObj = calendarDaysMap.get(dateStr);
+      if (dayObj && studentReturnedDayIds.has(dayObj._id.toString())) {
+        return; // Can't select returned days
       }
     } else if (mode === 'return') {
       // In return mode, can only select previously selected (purchased) days
       if (!studentSelectedDays.has(dateStr)) {
         return; // Can't select days that weren't selected before
+      }
+
+      // Check if return limit has been reached
+      const returnCount = studentData?.returnCount || 0;
+      const maxReturns = 10;
+      const remainingReturns = maxReturns - returnCount;
+      const minReturnDays = 3;
+
+      if (remainingReturns < minReturnDays) {
+        return; // Can't return if less than 3 days quota remaining
+      }
+
+      // Check if adding this day would exceed limit
+      if (!selectedDates.has(dateStr) && selectedDates.size >= remainingReturns) {
+        return; // Can't select more days than allowed
       }
     }
 
@@ -121,8 +157,14 @@ export default function ManageBorder() {
           }) || []
         );
         setStudentSelectedDays(existingDates);
+        
+        // Get returned day IDs
+        const returnedDayIds = new Set(
+          res.data.studentData?.returnedDays?.map(d => d.toString()) || []
+        );
+        setStudentReturnedDayIds(returnedDayIds);
+        
         setSelectedDates(new Set());
-        setPaidAmount(res.data.student.paidAmount || 0);
       }
     } catch (err) {
       console.log(err);
@@ -131,8 +173,8 @@ export default function ManageBorder() {
   };
 
   const handleReturnToken = async () => {
-    // Get dates to be removed (dates in studentSelectedDays but not in selectedDates)
-    const datesToRemove = Array.from(studentSelectedDays).filter(d => !selectedDates.has(d));
+    // Get dates to be removed (dates selected in return mode)
+    const datesToRemove = Array.from(selectedDates);
 
     if (datesToRemove.length === 0) {
       alert('Please select at least one day to return');
@@ -142,7 +184,8 @@ export default function ManageBorder() {
     try {
       await borderAPI.returnToken({
         studentId: searchId,
-        datesToRemove: datesToRemove
+        datesToRemove: datesToRemove,
+        refundedAmount: Number(refundedAmount) || 0
       });
       alert('Token returned successfully');
       
@@ -158,12 +201,38 @@ export default function ManageBorder() {
           }) || []
         );
         setStudentSelectedDays(existingDates);
+        
+        // Get returned day IDs
+        const returnedDayIds = new Set(
+          res.data.studentData?.returnedDays?.map(d => d.toString()) || []
+        );
+        setStudentReturnedDayIds(returnedDayIds);
+        
         setSelectedDates(new Set());
-        setPaidAmount(res.data.student.paidAmount || 0);
+        setRefundedAmount(0);
       }
       setMode(null);
     } catch (err) {
       setError('Failed to return token');
+    }
+  };
+
+  const handlePayFeast = async () => {
+    setFeastLoading(true);
+    try {
+      await borderAPI.payFeastDue({ studentId: searchId });
+      alert('Feast paid successfully');
+      
+      // Refresh student data
+      const res = await borderAPI.searchStudent(searchId);
+      setMonthData(res.data);
+      if (res.data.exists) {
+        setStudentData(res.data.student);
+      }
+    } catch (err) {
+      setError('Failed to pay feast');
+    } finally {
+      setFeastLoading(false);
     }
   };
 
@@ -217,19 +286,47 @@ export default function ManageBorder() {
       )}
 
       {studentData && (
-        <div className="student-info">
-          <h2>Student Information</h2>
-          <div className="info-grid">
-            <p><strong>ID:</strong> {studentData.id}</p>
-            <p><strong>Name:</strong> {studentData.name}</p>
-            <p><strong>Phone:</strong> {studentData.phone}</p>
-            <p><strong>Room:</strong> {studentData.roomNo}</p>
-            <p><strong>Selected Days:</strong> {studentData.selectedDaysCount}</p>
-            <p><strong>Payable:</strong> {studentData.payableAmount} TK</p>
-            <p><strong>Paid:</strong> {studentData.paidAmount} TK</p>
-            <p><strong>Due:</strong> {studentData.dueAmount} TK</p>
+        <>
+          <div className="student-info">
+            <h2>Student Information</h2>
+            <div className="info-grid">
+              <p><strong>ID:</strong> {studentData.id}</p>
+              <p><strong>Name:</strong> {studentData.name}</p>
+              <p><strong>Phone:</strong> {studentData.phone}</p>
+              <p><strong>Room:</strong> {studentData.roomNo}</p>
+              <p><strong>Selected Days:</strong> {studentData.selectedDaysCount}</p>
+            </div>
           </div>
-        </div>
+
+          {!studentData.feastpaid ? (
+            <div className="feast-box">
+              <div className="feast-content">
+                <div className="feast-icon">🍽️</div>
+                <div className="feast-info">
+                  <h3>Feast Due</h3>
+                  <p className="feast-amount">100 TK</p>
+                </div>
+              </div>
+              <button 
+                className="feast-button"
+                onClick={handlePayFeast}
+                disabled={feastLoading}
+              >
+                {feastLoading ? 'Processing...' : 'Pay feast due'}
+              </button>
+            </div>
+          ) : (
+            <div className="feast-box feast-paid">
+              <div className="feast-content">
+                <div className="feast-icon">✓</div>
+                <div className="feast-info">
+                  <h3>Feast Payment</h3>
+                  <p className="feast-status">Paid</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {searched && monthData?.calendarDays?.length > 0 && (
@@ -243,6 +340,7 @@ export default function ManageBorder() {
                 onDateClick={handleDateClick}
                 mode={mode ? (mode === 'return' ? 'return-token' : 'add-break') : null}
                 purchasedDates={studentSelectedDays}
+                returnedDayIds={studentReturnedDayIds}
               />
             </div>
 
@@ -250,28 +348,32 @@ export default function ManageBorder() {
               {searched && monthData?.calendarDays?.length > 0 && (
                 <div className="mode-buttons">
                   <button 
-                    className={mode === 'adjust' ? 'active' : ''} 
+                    className={`adjust-btn ${mode === 'adjust' ? 'active' : ''}`} 
                     onClick={() => {
                       if (mode === 'adjust') {
                         setMode(null);
                         setSelectedDates(new Set());
+                        setRefundedAmount(0);
                       } else {
                         setMode('adjust');
                         setSelectedDates(new Set());
+                        setRefundedAmount(0);
                       }
                     }}
                   >
                     Adjust Days
                   </button>
                   <button 
-                    className={mode === 'return' ? 'active' : ''} 
+                    className={`return-btn ${mode === 'return' ? 'active' : ''}`} 
                     onClick={() => {
                       if (mode === 'return') {
                         setMode(null);
                         setSelectedDates(new Set());
+                        setRefundedAmount(0);
                       } else {
                         setMode('return');
                         setSelectedDates(new Set());
+                        setRefundedAmount(0);
                       }
                     }}
                   >
@@ -280,7 +382,7 @@ export default function ManageBorder() {
                 </div>
               )}
 
-              {mode === 'adjust' && selectedDates.size > 0 && (
+              {mode === 'adjust' && selectedDates.size > 2 && (
                 <div className="payment-section">
                   <h3>Payment Details</h3>
                   <p>Payable Amount: {selectedDates.size * 2 * 40} TK (2 meals × 40 TK)</p>
@@ -290,7 +392,7 @@ export default function ManageBorder() {
                     value={paidAmount}
                     onChange={(e) => setPaidAmount(e.target.value)}
                   />
-                  <p>Due Amount: {Math.max(0, selectedDates.size * 2 * 40 - Number(paidAmount))} TK</p>
+                  <p>Due Amount: {selectedDates.size * 2 * 40 - Number(paidAmount)} TK</p>
 
                   <button onClick={() => {handleAdjust();}}  className="submit-btn">
                     Save Changes
@@ -298,18 +400,97 @@ export default function ManageBorder() {
                 </div>
               )}
 
-              {mode === 'return' && Array.from(studentSelectedDays).filter(d => !selectedDates.has(d)).length > 0 && (
+              {mode === 'return' && (
                 <div className="return-section">
-                  <p className="return-info">Select days to return (uncheck selected days above)</p>
-                  <p className="return-days">Days to return: {Array.from(studentSelectedDays).filter(d => !selectedDates.has(d)).length}</p>
-                  <p className="refund-amount">Refundable Amount: {Array.from(studentSelectedDays).filter(d => !selectedDates.has(d)).length * 35} TK</p>
-                  <button onClick={handleReturnToken} className="submit-btn return-btn">
-                    Return Token
-                  </button>
+                  {(() => {
+                    const returnCount = studentData?.returnCount || 0;
+                    const maxReturns = 10;
+                    const minReturnDays = 3;
+                    const remainingReturns = maxReturns - returnCount;
+                    
+                    if (remainingReturns < minReturnDays) {
+                      return (
+                        <p className="return-limit-reached" style={{ color: '#d32f2f', fontWeight: 'bold' }}>
+                          ❌ Insufficient quota. Need minimum {minReturnDays} days to return. Only {remainingReturns} day{remainingReturns !== 1 ? 's' : ''} remaining.
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <>
+                        <p className="return-limit-notice" style={{ color: '#f57c00', fontWeight: 'bold' }}>
+                          ℹ️ You can return up to {remainingReturns} day{remainingReturns !== 1 ? 's' : ''} (minimum {minReturnDays} days required)
+                        </p>
+                        <p className="return-info">Select days to return (click days above)</p>
+                        {selectedDates.size > 0 && (
+                          <>
+                            <p className="return-days">Days selected: {selectedDates.size}</p>
+                            {selectedDates.size < minReturnDays && (
+                              <p className="return-min-warning" style={{ color: '#f57c00' }}>
+                                ⚠️ Select at least {minReturnDays - selectedDates.size} more day{minReturnDays - selectedDates.size !== 1 ? 's' : ''}
+                              </p>
+                            )}
+                            <p className="refund-amount">Refundable Amount: {selectedDates.size * 35} TK</p>
+                            <input
+                              type="number"
+                              placeholder="Refunded Amount"
+                              value={refundedAmount}
+                              onChange={(e) => setRefundedAmount(e.target.value)}
+                            />
+                            <button 
+                              onClick={handleReturnToken} 
+                              className="submit-btn return-btn"
+                              disabled={selectedDates.size < minReturnDays}
+                            >
+                              {selectedDates.size < minReturnDays ? `Select ${minReturnDays - selectedDates.size} more day(s)` : 'Return Token'}
+                            </button>
+                          </>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {studentData && studentData.transactions && studentData.transactions.length > 0 && (
+        <div className="transaction-history">
+          <h2>Transaction History</h2>
+          <table className="transaction-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Days</th>
+                <th>Payable/Returnable</th>
+                <th>Paid/Refunded</th>
+                <th>Payment Due / Refund Due</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody>
+              {studentData.transactions.map((transaction, index) => (
+                <tr key={index}>
+                  <td>{new Date(transaction.date).toLocaleDateString()}</td>
+                  <td>{transaction.days}</td>
+                  <td>{transaction.amount}</td>
+                  <td>{transaction.paidAmount}</td>
+                  <td>{transaction.amount - transaction.paidAmount}</td>
+                  <td>{transaction.type}</td>
+                </tr>
+              ))}
+              <tr className="total-row">
+                <td colSpan="1"><strong>Total</strong></td>
+                <td><strong>{studentData.transactions.reduce((sum, t) => sum + t.days, 0)}</strong></td>
+                <td><strong>{studentData.transactions.reduce((sum, t) => sum + t.amount, 0)}</strong></td>
+                <td><strong>{studentData.transactions.reduce((sum, t) => sum + t.paidAmount, 0)}</strong></td>
+                <td><strong>{studentData.transactions.reduce((sum, t) => sum + (t.amount - t.paidAmount), 0)}</strong></td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
     </div>

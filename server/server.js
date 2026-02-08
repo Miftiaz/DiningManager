@@ -20,7 +20,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/border', require('./routes/borderRoutes'));
-app.use('/api/feast-token', require('./routes/feastTokenRoutes'));
 app.use('/api/dining-month', require('./routes/diningMonthRoutes'));
 
 // Health Check
