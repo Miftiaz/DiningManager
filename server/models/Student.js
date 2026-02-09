@@ -17,11 +17,12 @@ const studentSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now },
       days: { type: Number, required: true },
       amount: { type: Number, required: true },
-      type: { type: String, enum: ['Payment', 'Refund'], required: true },
+      type: { type: String, enum: ['Payment', 'Refund', 'Feast', 'Daily Feast Quota'], required: true },
       paidAmount: { type: Number, default: 0 }
     }
   ],
   feastpaid: { type: Boolean, default: false },
+  dailyFeastQuotaPaid: { type: Boolean, default: false },
   returnCount: { type: Number, default: 0 },
   returnedDays: [
     {

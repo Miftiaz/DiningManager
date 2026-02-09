@@ -7,6 +7,8 @@ const {
   adjustStudentDays,
   returnToken,
   payFeastDue,
+  clearPaymentDue,
+  payDailyFeastQuota,
   getAllStudents
 } = require('../controllers/borderController');
 
@@ -16,5 +18,7 @@ router.get('/calendar', authMiddleware, getCalendarForAdjustment);
 router.post('/adjust', authMiddleware, adjustStudentDays);
 router.post('/return-token', authMiddleware, returnToken);
 router.post('/pay-feast', authMiddleware, payFeastDue);
+router.post('/clear-payment-due', authMiddleware, clearPaymentDue);
+router.post('/pay-daily-feast-quota', authMiddleware, payDailyFeastQuota);
 
 module.exports = router;

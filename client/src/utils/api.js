@@ -25,7 +25,9 @@ export const borderAPI = {
   getCalendar: () => API.get('/border/calendar'),
   adjustStudentDays: (data) => API.post('/border/adjust', data),
   returnToken: (data) => API.post('/border/return-token', data),
-  payFeastDue: (data) => API.post('/border/pay-feast', data)
+  payFeastDue: (data) => API.post('/border/pay-feast', data),
+  clearPaymentDue: (data) => API.post('/border/clear-payment-due', data),
+  payDailyFeastQuota: (data) => API.post('/border/pay-daily-feast-quota', data)
 };
 
 // export const feastTokenAPI = {

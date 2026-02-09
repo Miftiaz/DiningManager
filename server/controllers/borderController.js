@@ -44,6 +44,11 @@ const searchStudent = async (req, res) => {
 
     // Student exists
     const selectedDaysCount = student.selectedDays.length;
+    const returnedDaysCount = (student.returnedDays || []).length;
+    const totalDaysUsed = selectedDaysCount + returnedDaysCount;
+    
+    // Check if daily feast quota is paid or student has 30 days
+    const dailyFeastQuotaPaid = student.dailyFeastQuotaPaid || totalDaysUsed >= 30;
 
     res.json({
       exists: true,
@@ -53,6 +58,8 @@ const searchStudent = async (req, res) => {
         phone: student.phone,
         roomNo: student.roomNo,
         selectedDaysCount,
+        returnedDaysCount,
+        dailyFeastQuotaPaid,
         transactions: student.transactions,
         feastpaid: student.feastpaid,
         returnCount: student.returnCount || 0
@@ -181,6 +188,12 @@ const adjustStudentDays = async (req, res) => {
       paidAmount: paidAmount || 0
     });
 
+    // Check if student has reached 30 days
+    const totalDaysUsed = student.selectedDays.length + (student.returnedDays || []).length;
+    if (totalDaysUsed >= 30) {
+      student.dailyFeastQuotaPaid = true;
+    }
+
     await student.save();
 
     res.json({ message: 'Student updated', student });
@@ -302,6 +315,12 @@ const returnToken = async (req, res) => {
     // Increment return count by number of days returned
     student.returnCount = currentReturnCount + refundDays;
 
+    // Check if student has reached 30 days
+    const totalDaysUsed = student.selectedDays.length + (student.returnedDays || []).length;
+    if (totalDaysUsed >= 30) {
+      student.dailyFeastQuotaPaid = true;
+    }
+
     await student.save();
 
     // Remove student ID from the DiningDay documents
@@ -360,7 +379,7 @@ const payFeastDue = async (req, res) => {
       date: new Date(),
       days: 0,
       amount: 100,
-      type: 'Payment',
+      type: 'Feast',
       paidAmount: 100
     });
 
@@ -401,19 +420,27 @@ const getAllStudents = async (req, res) => {
       const totalAmount = student.transactions.reduce((sum, t) => sum + t.amount, 0);
       const totalPaid = student.transactions.reduce((sum, t) => sum + t.paidAmount, 0);
       const dueAmount = totalAmount - totalPaid;
+      const returnedDaysCount = (student.returnedDays || []).length;
+      const selectedDaysCount = student.selectedDays.length;
+      const totalDaysUsed = selectedDaysCount + returnedDaysCount;
+      
+      // Check if daily feast quota is paid or student has 30 days
+      const dailyFeastQuotaPaid = student.dailyFeastQuotaPaid || totalDaysUsed >= 30;
 
       return {
         id: student.id,
         name: student.name,
         phone: student.phone,
         roomNo: student.roomNo,
-        selectedDaysCount: student.selectedDays.length,
+        selectedDaysCount,
+        returnedDaysCount,
         totalDays,
         totalAmount,
         totalPaid,
         dueAmount,
         transactions: student.transactions,
         feastpaid: student.feastpaid,
+        dailyFeastQuotaPaid,
         _id: student._id
       };
     });
@@ -428,11 +455,124 @@ const getAllStudents = async (req, res) => {
   }
 };
 
+// Clear Payment Due / Refund Due
+const clearPaymentDue = async (req, res) => {
+  try {
+    const managerId = req.managerId;
+    const { studentId } = req.body;
+
+    const diningMonth = await DiningMonth.findOne({
+      manager: managerId,
+      isActive: true
+    });
+
+    if (!diningMonth) {
+      return res.status(400).json({ message: 'No active dining month' });
+    }
+
+    const student = await Student.findOne({
+      manager: managerId,
+      diningMonth: diningMonth._id,
+      id: studentId
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Calculate current due amount
+    const totalAmount = student.transactions.reduce((sum, t) => sum + t.amount, 0);
+    const totalPaid = student.transactions.reduce((sum, t) => sum + t.paidAmount, 0);
+    const dueAmount = totalAmount - totalPaid;
+
+    if (dueAmount === 0) {
+      return res.status(400).json({ message: 'No payment or refund due to clear' });
+    }
+
+    // Add transaction to clear the due
+    // If dueAmount is positive (payment due), paidAmount should be positive to clear it
+    // If dueAmount is negative (refund due), paidAmount should be negative to clear it
+    student.transactions.push({
+      date: new Date(),
+      days: 0,
+      amount: 0,
+      type: dueAmount > 0 ? 'Payment' : 'Refund',
+      paidAmount: dueAmount
+    });
+
+    await student.save();
+
+    res.json({ message: 'Payment due cleared successfully', student });
+  } catch (error) {
+    console.error('Error clearing payment due:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Pay Daily Feast Quota
+const payDailyFeastQuota = async (req, res) => {
+  try {
+    const managerId = req.managerId;
+    const { studentId } = req.body;
+
+    const diningMonth = await DiningMonth.findOne({
+      manager: managerId,
+      isActive: true
+    });
+
+    if (!diningMonth) {
+      return res.status(400).json({ message: 'No active dining month' });
+    }
+
+    const student = await Student.findOne({
+      manager: managerId,
+      diningMonth: diningMonth._id,
+      id: studentId
+    });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    // Calculate daily feast quota due
+    const selectedDaysCount = student.selectedDays.length;
+    const returnedDaysCount = (student.returnedDays || []).length;
+    const totalDaysUsed = selectedDaysCount + returnedDaysCount;
+    const remainingDays = 30 - totalDaysUsed;
+    const quotaDue = remainingDays > 0 ? remainingDays * 10 : 0;
+
+    if (quotaDue === 0) {
+      return res.status(400).json({ message: 'No daily feast quota due' });
+    }
+
+    // Add transaction for daily feast quota
+    student.transactions.push({
+      date: new Date(),
+      days: 0,
+      amount: quotaDue,
+      type: 'Daily Feast Quota',
+      paidAmount: quotaDue
+    });
+
+    // Set dailyFeastQuotaPaid to true
+    student.dailyFeastQuotaPaid = true;
+
+    await student.save();
+
+    res.json({ message: 'Daily feast quota payment processed successfully', student });
+  } catch (error) {
+    console.error('Error paying daily feast quota:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   searchStudent,
   getCalendarForAdjustment,
   adjustStudentDays,
   returnToken,
   payFeastDue,
+  clearPaymentDue,
+  payDailyFeastQuota,
   getAllStudents
 };
