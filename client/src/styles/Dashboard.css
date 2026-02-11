@@ -39,17 +39,40 @@
   color: #333;
 }
 
+.info-cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
 .info-card {
   background-color: white;
-  padding: 20px;
+  padding: 30px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-left: 4px solid #667eea;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.info-card p {
-  margin: 10px 0;
-  font-size: 16px;
+.info-card .label {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-card .big-number {
+  margin: 0;
+  font-size: 48px;
+  font-weight: bold;
+  color: #667eea;
 }
 
 .calendar-section {
@@ -221,4 +244,9 @@
 
 .no-month button:hover {
   background-color: #218838;
+}
+@media (max-width: 768px) {
+  .info-cards-container {
+    grid-template-columns: 1fr;
+  }
 }

@@ -101,29 +101,55 @@ const getCalendarForAdjustment = async (req, res) => {
 
 // Adjust Student Dining Days
 const adjustStudentDays = async (req, res) => {
+  const session = await DiningMonth.startSession();
+  session.startTransaction();
+
   try {
     const managerId = req.managerId;
     const { studentId, name, phone, roomNo, selectedDays, paidAmount } = req.body;
 
+    // Validate required fields
+    if (!studentId || !studentId.trim()) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'Student ID is required' });
+    }
+
+    if (!name || !name.trim()) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'Student name is required' });
+    }
+
+    if (!phone || !phone.trim()) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'Phone number is required' });
+    }
+
+    if (!roomNo || !roomNo.trim()) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'Room number is required' });
+    }
+
     const diningMonth = await DiningMonth.findOne({
       manager: managerId,
       isActive: true
-    });
+    }).session(session);
 
     if (!diningMonth) {
+      await session.abortTransaction();
       return res.status(400).json({ message: 'No active dining month' });
     }
 
     // Validate selectedDays has dayId
-    if (!selectedDays || !Array.isArray(selectedDays)) {
-      return res.status(400).json({ message: 'selectedDays must be an array' });
+    if (!selectedDays || !Array.isArray(selectedDays) || selectedDays.length === 0) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'At least one dining day must be selected' });
     }
 
     let student = await Student.findOne({
       manager: managerId,
       diningMonth: diningMonth._id,
       id: studentId
-    });
+    }).session(session);
 
     if (!student) {
       // Create new student
@@ -131,9 +157,9 @@ const adjustStudentDays = async (req, res) => {
         manager: managerId,
         diningMonth: diningMonth._id,
         id: studentId,
-        name,
-        phone,
-        roomNo,
+        name: name.trim(),
+        phone: phone.trim(),
+        roomNo: roomNo.trim(),
         selectedDays: selectedDays.map(day => ({
           day: day.dayId
         })),
@@ -147,6 +173,7 @@ const adjustStudentDays = async (req, res) => {
       );
 
       if (attemptedReturnedDays.length > 0) {
+        await session.abortTransaction();
         return res.status(400).json({
           message: 'Cannot re-purchase days that have been returned.',
           restrictedDays: attemptedReturnedDays.map(d => d.dayId)
@@ -154,9 +181,9 @@ const adjustStudentDays = async (req, res) => {
       }
 
       // Update existing student - append new days to existing days
-      if (name) student.name = name;
-      if (phone) student.phone = phone;
-      if (roomNo) student.roomNo = roomNo;
+      if (name) student.name = name.trim();
+      if (phone) student.phone = phone.trim();
+      if (roomNo) student.roomNo = roomNo.trim();
       
       // Get existing day IDs
       const existingDayIds = student.selectedDays.map(d => d.day.toString());
@@ -173,7 +200,8 @@ const adjustStudentDays = async (req, res) => {
     const selectedDayIds = selectedDays.map(day => day.dayId);
     await DiningDay.updateMany(
       { _id: { $in: selectedDayIds } },
-      { $addToSet: { students: { student: student._id } } }
+      { $addToSet: { students: { student: student._id } } },
+      { session }
     );
 
     // Calculate payable amount (80 TK per day) and add transaction
@@ -194,12 +222,16 @@ const adjustStudentDays = async (req, res) => {
       student.dailyFeastQuotaPaid = true;
     }
 
-    await student.save();
+    await student.save({ session });
 
+    await session.commitTransaction();
     res.json({ message: 'Student updated', student });
   } catch (error) {
     console.error('Error adjusting student days:', error);
+    await session.endSession();
     res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession();
   }
 };
 

@@ -147,10 +147,6 @@ export default function ManageFeastToken() {
 
   return (
     <div className="manage-feast-token-container">
-      <div className="back-button">
-        <button onClick={() => window.history.back()}>← Back</button>
-      </div>
-
       <h1>Manage Students</h1>
 
       {error && <div className="error">{error}</div>}

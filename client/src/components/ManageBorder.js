@@ -120,6 +120,29 @@ export default function ManageBorder() {
       return;
     }
 
+    // Get and validate student details
+    const name = (document.getElementById('studentName')?.value || studentData?.name || '').trim();
+    const phone = (document.getElementById('studentPhone')?.value || studentData?.phone || '').trim();
+    const roomNo = (document.getElementById('studentRoom')?.value || studentData?.roomNo || '').trim();
+
+    // Validate required fields for new students
+    if (!studentData) {
+      if (!name) {
+        setError('Student name is required');
+        return;
+      }
+      if (!phone) {
+        setError('Phone number is required');
+        return;
+      }
+      if (!roomNo) {
+        setError('Room number is required');
+        return;
+      }
+    }
+
+    setError('');
+
     try {
       // Convert selected dates back to day objects
       const calendarDaysMap = new Map(
@@ -136,9 +159,9 @@ export default function ManageBorder() {
 
       await borderAPI.adjustStudentDays({
         studentId: searchId,
-        name: document.getElementById('studentName')?.value || studentData?.name,
-        phone: document.getElementById('studentPhone')?.value || studentData?.phone,
-        roomNo: document.getElementById('studentRoom')?.value || studentData?.roomNo,
+        name: name,
+        phone: phone,
+        roomNo: roomNo,
         selectedDays: selectedDaysArray,
         paidAmount: Number(paidAmount),
         feastDue: 0
@@ -238,10 +261,6 @@ export default function ManageBorder() {
 
   return (
     <div className="manage-border-container">
-      <div className="back-button">
-        <button onClick={() => window.history.back()}>← Back</button>
-      </div>
-
       <h1>Manage Border</h1>
 
       <div className="search-section">

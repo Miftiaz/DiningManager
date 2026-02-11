@@ -10,6 +10,7 @@ export default function AdjustDiningMonth() {
   const [selectedDates, setSelectedDates] = useState(new Set());
   const [mode, setMode] = useState(null); // null, 'add-break', or 'remove-break'
   const [lastClickedDate, setLastClickedDate] = useState(null);
+  const [breakReason, setBreakReason] = useState('');
 
   useEffect(() => {
     fetchCalendar();
@@ -90,10 +91,12 @@ export default function AdjustDiningMonth() {
       setMode(null);
       setSelectedDates(new Set());
       setLastClickedDate(null);
+      setBreakReason('');
     } else {
       setMode('add-break');
       setSelectedDates(new Set());
       setLastClickedDate(null);
+      setBreakReason('');
     }
   };
 
@@ -102,10 +105,12 @@ export default function AdjustDiningMonth() {
       setMode(null);
       setSelectedDates(new Set());
       setLastClickedDate(null);
+      setBreakReason('');
     } else {
       setMode('remove-break');
       setSelectedDates(new Set());
       setLastClickedDate(null);
+      setBreakReason('');
     }
   };
 
@@ -118,12 +123,14 @@ export default function AdjustDiningMonth() {
     try {
       // Convert selected dates to sorted array
       const datesArray = Array.from(selectedDates).sort();
-      await diningMonthAPI.addBreakDates({ dates: datesArray });
+      const reason = breakReason.trim() || 'Break';
+      await diningMonthAPI.addBreakDates({ dates: datesArray, reason });
       
       fetchCalendar();
       setMode(null);
       setSelectedDates(new Set());
       setLastClickedDate(null);
+      setBreakReason('');
     } catch (err) {
       const errorMsg = err.response?.data?.message || 'Failed to add breaks';
       console.log(err.response?.data);
@@ -159,10 +166,6 @@ export default function AdjustDiningMonth() {
 
   return (
     <div className="adjust-dining-month-container">
-      <div className="back-button">
-        <button onClick={() => window.history.back()}>← Back</button>
-      </div>
-
       <h1>Adjust Dining Month</h1>
 
       {error && <div className="error">{error}</div>}
@@ -196,6 +199,19 @@ export default function AdjustDiningMonth() {
 
           {mode && (
             <div className="selection-panel">
+              {mode === 'add-break' && (
+                <div className="break-reason-box">
+                  <label htmlFor="break-reason">Reason for Break:</label>
+                  <input
+                    id="break-reason"
+                    type="text"
+                    placeholder="Enter reason (optional)"
+                    value={breakReason}
+                    onChange={(e) => setBreakReason(e.target.value)}
+                    className="reason-input"
+                  />
+                </div>
+              )}
               <div className="selected-dates-list">
                 {selectedDates.size > 0 ? (
                   <>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { isAuthenticated } from './utils/helpers';
 import Login from './components/Login';
@@ -7,13 +7,25 @@ import Dashboard from './components/Dashboard';
 import ManageBorder from './components/ManageBorder';
 import ManageFeastToken from './components/ManageFeastToken';
 import AdjustDiningMonth from './components/AdjustDiningMonth';
+import Sidebar from './components/Sidebar';
 import './styles/App.css';
 
-function ProtectedRoute({ children }) {
-  return isAuthenticated() ? children : <Navigate to="/login" />;
+function ProtectedRoute({ children, isExpanded, onToggleSidebar }) {
+  return isAuthenticated() ? (
+    <div className="app-layout">
+      <Sidebar isExpanded={isExpanded} onToggleSidebar={onToggleSidebar} />
+      <div className="main-content">
+        {children}
+      </div>
+    </div>
+  ) : (
+    <Navigate to="/login" />
+  );
 }
 
 export default function App() {
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+
   return (
     <Router>
       <Routes>
@@ -22,7 +34,7 @@ export default function App() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute isExpanded={isSidebarExpanded} onToggleSidebar={(val) => setIsSidebarExpanded(val)}>
               <Dashboard />
             </ProtectedRoute>
           }
@@ -30,7 +42,7 @@ export default function App() {
         <Route
           path="/manage-border"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute isExpanded={isSidebarExpanded} onToggleSidebar={(val) => setIsSidebarExpanded(val)}>
               <ManageBorder />
             </ProtectedRoute>
           }
@@ -38,7 +50,7 @@ export default function App() {
         <Route
           path="/manage-feast-token"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute isExpanded={isSidebarExpanded} onToggleSidebar={(val) => setIsSidebarExpanded(val)}>
               <ManageFeastToken />
             </ProtectedRoute>
           }
@@ -46,7 +58,7 @@ export default function App() {
         <Route
           path="/adjust-dining-month"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute isExpanded={isSidebarExpanded} onToggleSidebar={(val) => setIsSidebarExpanded(val)}>
               <AdjustDiningMonth />
             </ProtectedRoute>
           }

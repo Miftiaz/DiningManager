@@ -63,10 +63,21 @@ export default function Dashboard() {
         <>
           <div className="next-day-info">
             <h2>Next Day Border Count</h2>
-            <div className="info-card">
-              <p>Day: {dashboardData.nextDayInfo?.nextDayNo}</p>
-              <p>Date: {formatDate(dashboardData.nextDayInfo?.date)}</p>
-              <p>Borders: {dashboardData.nextDayInfo?.borderCount}</p>
+            <div className="info-cards-container">
+              <div className="info-card">
+                <p className="label">Day</p>
+                <p className="big-number">{dashboardData.nextDayInfo?.nextDayNo}</p>
+              </div>
+              <div className="info-card">
+                <p className="label">Date</p>
+                <p className="big-number">
+                  {new Date(dashboardData.nextDayInfo?.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+              </div>
+              <div className="info-card">
+                <p className="label">Borders</p>
+                <p className="big-number">{dashboardData.nextDayInfo?.borderCount}</p>
+              </div>
             </div>
           </div>
 
@@ -75,12 +86,6 @@ export default function Dashboard() {
             <CalendarGrid 
               monthData={dashboardData}
             />
-          </div>
-
-          <div className="action-buttons">
-            <button onClick={() => navigate('/manage-border')}>Manage Border</button>
-            <button onClick={() => navigate('/manage-feast-token')}>Manage Feast Token</button>
-            <button onClick={() => navigate('/adjust-dining-month')}>Adjust Dining Month</button>
           </div>
         </>
       ) : (

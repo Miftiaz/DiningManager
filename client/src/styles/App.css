@@ -1,3 +1,29 @@
 #root {
   min-height: 100vh;
 }
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+}
+
+.main-content {
+  flex: 1;
+  width: 100%;
+  transition: margin-left 0.3s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* When sidebar is expanded (default) */
+.sidebar.expanded ~ .main-content {
+  margin-left: 250px;
+}
+
+/* When sidebar is collapsed */
+.sidebar.collapsed ~ .main-content {
+  margin-left: 70px;
+}
+
+

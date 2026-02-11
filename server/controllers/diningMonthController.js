@@ -79,7 +79,7 @@ const addBreakDates = async (req, res) => {
 
   try {
     const managerId = req.managerId;
-    const { dates } = req.body;
+    const { dates, reason } = req.body;
 
     if (!dates || !Array.isArray(dates) || dates.length === 0) {
       return res.status(400).json({ message: 'Dates array is required' });
@@ -137,10 +137,11 @@ const addBreakDates = async (req, res) => {
     // EXECUTION PHASE: All validations passed, now apply changes
 
     // Step 1: Add breakdays to breakDays array
+    const breakReason = reason && reason.trim() ? reason.trim() : 'Break day';
     datesToProcess.forEach(date => {
       diningMonth.breakDays.push({
         date: date,
-        reason: 'Single day break'
+        reason: breakReason
       });
     });
 
