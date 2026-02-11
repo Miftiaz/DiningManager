@@ -17,6 +17,7 @@ export default function Sidebar({ isExpanded, onToggleSidebar }) {
     { label: 'Manage Border', path: '/manage-border' },
     { label: 'Manage Feast Token', path: '/manage-feast-token' },
     { label: 'Adjust Dining Month', path: '/adjust-dining-month' },
+    { label: 'Transactions', path: '/transactions' },
   ];
 
   const isActive = (path) => location.pathname === path;

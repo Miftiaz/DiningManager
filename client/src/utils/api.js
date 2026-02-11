@@ -27,7 +27,8 @@ export const borderAPI = {
   returnToken: (data) => API.post('/border/return-token', data),
   payFeastDue: (data) => API.post('/border/pay-feast', data),
   clearPaymentDue: (data) => API.post('/border/clear-payment-due', data),
-  payDailyFeastQuota: (data) => API.post('/border/pay-daily-feast-quota', data)
+  payDailyFeastQuota: (data) => API.post('/border/pay-daily-feast-quota', data),
+  getAllTransactions: () => API.get('/border/transactions')
 };
 
 // export const feastTokenAPI = {

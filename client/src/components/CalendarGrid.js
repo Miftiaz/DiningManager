@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function CalendarGrid({ monthData, selectedDates = new Set(), onDateClick, mode, purchasedDates = new Set(), returnedDayIds = new Set() }) {
+export default function CalendarGrid({ monthData, selectedDates = new Set(), onDateClick, mode, purchasedDates = new Set(), returnedDayIds = new Set(), showBorderCount = false }) {
   const renderCalendarGrid = (data) => {
     const months = {};
     
@@ -136,6 +136,7 @@ export default function CalendarGrid({ monthData, selectedDates = new Set(), onD
           >
             <span className="cell-day">{day}</span>
             {diningDay && <span className="dining-number">Day {diningDay.day || diningDay.dayNumber}</span>}
+            {diningDay && showBorderCount && <span className="border-indicator">B: {diningDay.borderCount}</span>}
             {isBreakDay && <span className="break-indicator">Break</span>}
             {isReturned && <span className="returned-indicator">✗</span>}
           </div>

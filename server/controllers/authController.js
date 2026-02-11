@@ -115,7 +115,8 @@ const getDashboard = async (req, res) => {
         day: diningDay.dayNumber,
         date: dateObj,
         isPast,
-        isBreak: false
+        isBreak: false,
+        borderCount: diningDay.students.length
       });
     });
 

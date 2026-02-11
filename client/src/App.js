@@ -7,6 +7,7 @@ import Dashboard from './components/Dashboard';
 import ManageBorder from './components/ManageBorder';
 import ManageFeastToken from './components/ManageFeastToken';
 import AdjustDiningMonth from './components/AdjustDiningMonth';
+import Transactions from './components/Transactions';
 import Sidebar from './components/Sidebar';
 import './styles/App.css';
 
@@ -60,6 +61,14 @@ export default function App() {
           element={
             <ProtectedRoute isExpanded={isSidebarExpanded} onToggleSidebar={(val) => setIsSidebarExpanded(val)}>
               <AdjustDiningMonth />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/transactions"
+          element={
+            <ProtectedRoute isExpanded={isSidebarExpanded} onToggleSidebar={(val) => setIsSidebarExpanded(val)}>
+              <Transactions />
             </ProtectedRoute>
           }
         />

@@ -10,6 +10,7 @@ const diningMonthSchema = new mongoose.Schema({
     date: { type: Date, required: true },
     reason: { type: String, default: 'Break day' }
   }],
+  feastSubscribers: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });

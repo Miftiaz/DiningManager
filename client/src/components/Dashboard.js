@@ -60,23 +60,24 @@ export default function Dashboard() {
 
       {dashboardData?.activeDiningMonth ? (
         <>
-          <div className="next-day-info">
-            <h2>Next Day Border Count</h2>
-            <div className="info-cards-container">
-              <div className="info-card">
-                <p className="label">Day</p>
-                <p className="big-number">{dashboardData.nextDayInfo?.nextDayNo}</p>
-              </div>
-              <div className="info-card">
-                <p className="label">Date</p>
-                <p className="big-number">
-                  {new Date(dashboardData.nextDayInfo?.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </p>
-              </div>
-              <div className="info-card">
-                <p className="label">Borders</p>
-                <p className="big-number">{dashboardData.nextDayInfo?.borderCount}</p>
-              </div>
+          <div className="dashboard-stats">
+            <div className="info-card">
+              <p className="label">Next Day Number</p>
+              <p className="big-number">{dashboardData.nextDayInfo?.nextDayNo}</p>
+            </div>
+            <div className="info-card">
+              <p className="label">Next Date</p>
+              <p className="big-number">
+                {new Date(dashboardData.nextDayInfo?.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </p>
+            </div>
+            <div className="info-card">
+              <p className="label">Next Day Borders</p>
+              <p className="big-number">{dashboardData.nextDayInfo?.borderCount}</p>
+            </div>
+            <div className="info-card">
+              <p className="label">Feast Subscribers</p>
+              <p className="big-number">{dashboardData.activeDiningMonth?.feastSubscribers || 0}</p>
             </div>
           </div>
 
@@ -84,6 +85,7 @@ export default function Dashboard() {
             <h2>Dining Month Calendar</h2>
             <CalendarGrid 
               monthData={dashboardData}
+              showBorderCount={true}
             />
           </div>
         </>

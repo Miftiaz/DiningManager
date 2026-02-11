@@ -420,6 +420,12 @@ const payFeastDue = async (req, res) => {
 
     await student.save();
 
+    // Increment feastSubscribers count in DiningMonth
+    await DiningMonth.updateOne(
+      { _id: diningMonth._id },
+      { $inc: { feastSubscribers: 1 } }
+    );
+
     res.json({ message: 'Feast paid successfully', student });
   } catch (error) {
     console.error('Error paying feast due:', error);
@@ -598,6 +604,52 @@ const payDailyFeastQuota = async (req, res) => {
   }
 };
 
+// Get All Transactions
+const getAllTransactions = async (req, res) => {
+  try {
+    const managerId = req.managerId;
+
+    const diningMonth = await DiningMonth.findOne({
+      manager: managerId,
+      isActive: true
+    });
+
+    if (!diningMonth) {
+      return res.json({ message: 'No active dining month', data: [] });
+    }
+
+    // Get all students for the active dining month
+    const students = await Student.find({
+      manager: managerId,
+      diningMonth: diningMonth._id
+    });
+
+    // Flatten all transactions with student ID
+    const allTransactions = [];
+    students.forEach(student => {
+      if (student.transactions && student.transactions.length > 0) {
+        student.transactions.forEach(transaction => {
+          allTransactions.push({
+            studentId: student.id,
+            date: transaction.date,
+            days: transaction.days,
+            amount: transaction.amount,
+            type: transaction.type,
+            paidAmount: transaction.paidAmount
+          });
+        });
+      }
+    });
+
+    // Sort by date descending
+    allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json(allTransactions);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   searchStudent,
   getCalendarForAdjustment,
@@ -606,5 +658,6 @@ module.exports = {
   payFeastDue,
   clearPaymentDue,
   payDailyFeastQuota,
-  getAllStudents
+  getAllStudents,
+  getAllTransactions
 };

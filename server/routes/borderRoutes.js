@@ -9,12 +9,14 @@ const {
   payFeastDue,
   clearPaymentDue,
   payDailyFeastQuota,
-  getAllStudents
+  getAllStudents,
+  getAllTransactions
 } = require('../controllers/borderController');
 
 router.get('/search', authMiddleware, searchStudent);
 router.get('/all-students', authMiddleware, getAllStudents);
 router.get('/calendar', authMiddleware, getCalendarForAdjustment);
+router.get('/transactions', authMiddleware, getAllTransactions);
 router.post('/adjust', authMiddleware, adjustStudentDays);
 router.post('/return-token', authMiddleware, returnToken);
 router.post('/pay-feast', authMiddleware, payFeastDue);
