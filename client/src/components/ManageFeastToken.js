@@ -9,6 +9,7 @@ export default function ManageFeastToken() {
   const [error, setError] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [feastLoading, setFeastLoading] = useState(false);
+  const [dailyFeastQuotaLoading, setDailyFeastQuotaLoading] = useState(false);
   const [clearPaymentLoading, setClearPaymentLoading] = useState(false);
 
   useEffect(() => {
@@ -85,7 +86,7 @@ export default function ManageFeastToken() {
   };
 
   const handlePayDailyFeastQuota = async () => {
-    setFeastLoading(true);
+    setDailyFeastQuotaLoading(true);
     try {
       await borderAPI.payDailyFeastQuota({ studentId: selectedStudent.id });
       alert('Daily feast quota payment processed successfully');
@@ -101,12 +102,14 @@ export default function ManageFeastToken() {
       setError('Failed to process daily feast quota payment');
       console.error(err);
     } finally {
-      setFeastLoading(false);
+      setDailyFeastQuotaLoading(false);
     }
   };
 
   const handleClearAll = async () => {
     setFeastLoading(true);
+    setDailyFeastQuotaLoading(true);
+    setClearPaymentLoading(true);
     try {
       // Call all three payment functions
       if (!selectedStudent.feastpaid) {
@@ -135,6 +138,8 @@ export default function ManageFeastToken() {
       console.error(err);
     } finally {
       setFeastLoading(false);
+      setDailyFeastQuotaLoading(false);
+      setClearPaymentLoading(false);
     }
   };
 
@@ -323,9 +328,9 @@ export default function ManageFeastToken() {
                         </p>
                         <button 
                           onClick={handlePayDailyFeastQuota}
-                          disabled={feastLoading}
+                          disabled={dailyFeastQuotaLoading}
                         >
-                          {feastLoading ? 'Processing...' : 'Pay Daily Feast Quota'}
+                          {dailyFeastQuotaLoading ? 'Processing...' : 'Pay Daily Feast Quota'}
                         </button>
                       </div>
                     )}

@@ -1,23 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import { borderAPI } from '../utils/api';
+import { borderAPI, authAPI } from '../utils/api';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import '../styles/Transactions.css';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [dashboardData, setDashboardData] = useState(null);
+  const [downloadLoading, setDownloadLoading] = useState(false);
 
   useEffect(() => {
-    fetchTransactions();
+    fetchData();
   }, []);
 
-  const fetchTransactions = async () => {
+  const fetchData = async () => {
     try {
-      const res = await borderAPI.getAllTransactions();
-      setTransactions(res.data);
+      const [transRes, dashRes] = await Promise.all([
+        borderAPI.getAllTransactions(),
+        authAPI.getDashboard()
+      ]);
+      setTransactions(transRes.data);
+      setDashboardData(dashRes.data);
       setLoading(false);
     } catch (err) {
-      setError('Failed to load transactions');
+      setError('Failed to load data');
       setLoading(false);
     }
   };
@@ -43,6 +51,93 @@ export default function Transactions() {
     );
   };
 
+  const downloadPDF = async () => {
+    setDownloadLoading(true);
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 15;
+      let yPosition = margin;
+
+      // Header
+      pdf.setFontSize(18);
+      pdf.text('Transaction History Report', margin, yPosition);
+      yPosition += 10;
+
+      // Manager Info
+      pdf.setFontSize(11);
+      pdf.text(`Manager: ${dashboardData?.manager?.name || 'N/A'}`, margin, yPosition);
+      yPosition += 7;
+
+      const startDate = new Date(dashboardData?.activeDiningMonth?.startDate).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+      const endDate = new Date(dashboardData?.activeDiningMonth?.endDate).toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric', 
+        year: 'numeric' 
+      });
+
+      pdf.text(`Dining Month: ${startDate} - ${endDate}`, margin, yPosition);
+      yPosition += 7;
+
+      pdf.text(`Feast Subscribers: ${dashboardData?.activeDiningMonth?.feastSubscribers || 0}`, margin, yPosition);
+      yPosition += 12;
+
+      // Table
+      const totals = calculateTotals();
+      const tableData = transactions.map(t => [
+        t.studentId,
+        formatDate(t.date),
+        t.days,
+        t.amount,
+        t.paidAmount,
+        calculateDue(t.amount, t.paidAmount),
+        t.type
+      ]);
+
+      // Add totals row
+      tableData.push([
+        { content: 'Total', styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: '', styles: { fillColor: [240, 240, 240] } },
+        { content: totals.days, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: totals.amount, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: totals.paidAmount, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: totals.due, styles: { fontStyle: 'bold', fillColor: [240, 240, 240] } },
+        { content: '-', styles: { fillColor: [240, 240, 240] } }
+      ]);
+
+      autoTable(pdf, {
+        head: [['Student ID', 'Date', 'Days', 'Payable/Returnable', 'Paid/Refunded', 'Payment Due / Refund Due', 'Type']],
+        body: tableData,
+        startY: yPosition,
+        margin: margin,
+        styles: {
+          fontSize: 9,
+          cellPadding: 4
+        },
+        headStyles: {
+          fillColor: [102, 126, 234],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        }
+      });
+
+      pdf.save(`Transaction_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`);
+    } catch (err) {
+      setError('Failed to download PDF');
+      console.error(err);
+    } finally {
+      setDownloadLoading(false);
+    }
+  };
+
   if (loading) return <div className="loading">Loading transactions...</div>;
 
   const totals = calculateTotals();
@@ -51,6 +146,13 @@ export default function Transactions() {
     <div className="transactions-container">
       <div className="transactions-header">
         <h1>Transaction History</h1>
+        <button 
+          className="download-btn"
+          onClick={downloadPDF}
+          disabled={downloadLoading || transactions.length === 0}
+        >
+          {downloadLoading ? 'Generating PDF...' : 'Download PDF'}
+        </button>
       </div>
 
       {error && <div className="error">{error}</div>}

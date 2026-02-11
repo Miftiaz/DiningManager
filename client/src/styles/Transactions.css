@@ -10,12 +10,37 @@
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .transactions-header h1 {
   margin: 0;
   font-size: 28px;
   color: #333;
+}
+
+.download-btn {
+  background-color: #667eea;
+  color: white;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  white-space: nowrap;
+}
+
+.download-btn:hover:not(:disabled) {
+  background-color: #5568d3;
+}
+
+.download-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
 .loading {
@@ -137,6 +162,17 @@
 @media (max-width: 768px) {
   .transactions-container {
     padding: 15px;
+  }
+
+  .transactions-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .download-btn {
+    width: 100%;
+    text-align: center;
   }
 
   .transactions-table {

@@ -351,7 +351,7 @@ export default function ManageBorder() {
         <div className="calendar-selection">
           <div className="calendar-wrapper">
             <div className="calendar-section">
-              <h2>{mode === 'adjust' ? 'Select Dining Days' : 'Return Selected Days'}</h2>
+              <h2>{mode === 'adjust' ? 'Select Dining Days' : mode === 'return' ? 'Return Selected Days' : 'Please Choose an option to Buy or Return Tokens'}</h2>
               <CalendarGrid 
                 monthData={monthData}
                 selectedDates={selectedDates}
