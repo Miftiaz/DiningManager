@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { borderAPI } from '../utils/api';
-import { formatDate, getDayName } from '../utils/helpers';
 import CalendarGrid from './CalendarGrid';
 import '../styles/ManageBorder.css';
 

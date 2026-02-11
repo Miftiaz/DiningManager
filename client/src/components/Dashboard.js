@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../utils/api';
-import { formatDate } from '../utils/helpers';
 import CalendarGrid from './CalendarGrid';
 import '../styles/Dashboard.css';
 

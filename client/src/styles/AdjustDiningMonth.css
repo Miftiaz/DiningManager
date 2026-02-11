@@ -373,6 +373,7 @@
 
 .breaks-list {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 }
 
@@ -380,31 +381,45 @@
   color: #333;
   margin: 0 0 15px 0;
   font-size: 16px;
+  grid-column: 1 / -1;
 }
 
 .break-item {
   background-color: #ffe0e0;
-  padding: 15px;
+  padding: 10px;
   border-radius: 6px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   border-left: 4px solid #ff6b6b;
+  text-align: center;
+  min-height: 80px;
 }
 
 .break-item p {
   margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.break-item .break-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  width: 100%;
+}
+
+.break-item .break-reason {
+  font-size: 0.875rem;
+  color: #555;
+  font-weight: normal;
 }
 
 .break-item button {
-  background-color: #dc3545;
-  color: white;
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-.break-item button:hover {
-  background-color: #c82333;
+  display: none;
 }
 
 .no-breaks {

@@ -215,6 +215,7 @@
   box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
 }
 
+
 .return-btn {
   background-color: #ffebee;
   color: #c62828;
@@ -324,12 +325,10 @@
   font-weight: 600;
 }
 
-.return-btn {
-  background-color: #dc3545;
-}
 
 .return-btn:hover {
   background-color: #c82333;
+  color: #f7ecec;
 }
 .transaction-history {
   background-color: white;

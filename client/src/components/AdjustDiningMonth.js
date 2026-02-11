@@ -222,11 +222,6 @@ export default function AdjustDiningMonth() {
                           const dDate = new Date(d.date);
                           return dDate.toISOString().split('T')[0] === dateStr;
                         });
-                        
-                        const breakDay = monthData.breakDates?.find(b => {
-                          const bDate = new Date(b.date);
-                          return bDate.toISOString().split('T')[0] === dateStr;
-                        });
 
                         const dayNum = diningDay ? String(diningDay.day).padStart(2, '0') : '??';
                         const date = new Date(dateStr);
@@ -235,7 +230,7 @@ export default function AdjustDiningMonth() {
 
                         return (
                           <div key={dateStr} className="date-item">
-                            Day {dayNum} - {formattedDate}
+                            {formattedDate}
                           </div>
                         );
                       })}
@@ -291,7 +286,7 @@ export default function AdjustDiningMonth() {
           <div className="breaks-section">
             <h2>Breaks</h2>
 
-            {!mode && monthData.breakDates?.length > 0 ? (
+            {monthData.breakDates?.length > 0 ? (
               <div className="breaks-list">
                 <h3>Current Breaks</h3>
                 {monthData.breakDates.map((bd, idx) => {
@@ -300,10 +295,10 @@ export default function AdjustDiningMonth() {
                   const formattedDate = `${monthNames[date.getMonth()]} ${date.getDate()}`;
                   return (
                     <div key={`break-${idx}`} className="break-item">
-                      <p>
+                      <div className="break-content">
                         <strong>{formattedDate}</strong>
-                        {bd.reason && ` - ${bd.reason}`}
-                      </p>
+                        {bd.reason && <span className="break-reason">{bd.reason}</span>}
+                      </div>
                     </div>
                   );
                 })}

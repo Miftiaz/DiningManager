@@ -33,13 +33,6 @@ export default function ManageFeastToken() {
     student.id.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getPaymentStatus = (dueAmount, totalAmount) => {
-    if (totalAmount === 0) return 'No Booking';
-    if (dueAmount === 0) return 'Paid';
-    if (dueAmount < 0) return 'Advance';
-    return 'Pending';
-  };
-
   const handlePayFeast = async () => {
     setFeastLoading(true);
     try {
